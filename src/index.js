@@ -9,6 +9,9 @@ const results = document.querySelector(".result-container");
 results.style.display = "none";
 loading.style.display = "none";
 errors.textContent = "";
+
+const sendBtn = document.querySelector('.send-btn');
+
 // grab the form
 const form = document.querySelector(".form-data");
 // grab the country name
@@ -25,6 +28,17 @@ const searchForCountry = async countryName => {
     recovered.textContent = response.data.recovered.value;
     deaths.textContent = response.data.deaths.value;
     results.style.display = "block";
+
+    sendBtn.addEventListener("click", async () => {
+      let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        args: ['Total cases: ' + cases.textContent],
+        function: setPageBackgroundColor,
+      });
+    });
+
   } catch (error) {
     loading.style.display = "none";
     results.style.display = "none";
@@ -40,3 +54,28 @@ const handleSubmit = async e => {
 };
 
 form.addEventListener("submit", e => handleSubmit(e));
+
+
+async function setPageBackgroundColor(message) {
+  //document.body.style.backgroundColor = 'red';
+
+  // open chat area if not
+  const iconChat = document.querySelectorAll('button.VfPpkd-Bz112c-LgbsSe.yHy1rc.eT1oJ.JsuyRc.boDUxc')[2];
+
+  if (iconChat.getAttribute('aria-pressed') == 'false') {
+    iconChat.click();
+  }
+
+  await sleep(1000);
+
+  const chatbox = document.querySelector('textarea#bfTqV');
+  chatbox.value = message;
+
+  const sendBtn = document.querySelector('button.VfPpkd-Bz112c-LgbsSe.yHy1rc.eT1oJ.QDwDD.tWDL4c.Cs0vCd');
+  sendBtn.removeAttribute('disabled')
+  sendBtn.click();
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
